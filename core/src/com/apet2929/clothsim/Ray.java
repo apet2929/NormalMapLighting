@@ -3,6 +3,8 @@ package com.apet2929.clothsim;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
+
 public class Ray {
     public Vector2 pos;
     public Vector2 dir;
@@ -15,11 +17,11 @@ public class Ray {
         this.radius = 400;
     }
 
-    public void cast(Wall[] walls){
+    public void cast(ArrayList<LightBlocker> walls){
         Vector2 closestIntersect = new Vector2(this.pos).add(this.dir.x * radius, this.dir.y * radius);
         float closestDist = radius * radius;
 
-        for (Wall wall : walls) {
+        for (LightBlocker wall : walls) {
             Vector2 intersectionPoint = getIntersect(wall);
             float dist = this.pos.dst2(intersectionPoint);
             if(dist < closestDist){
@@ -32,11 +34,11 @@ public class Ray {
         this.intersect = closestIntersect;
     }
 
-    public Vector2 getIntersect(Wall wall){
-        float x1 = wall.start.x;
-        float y1 = wall.start.y;
-        float x2 = wall.end.x;
-        float y2 = wall.end.y;
+    public Vector2 getIntersect(LightBlocker wall){
+        float x1 = wall.getStartPoint().x;
+        float y1 = wall.getStartPoint().y;
+        float x2 = wall.getEndPoint().x;
+        float y2 = wall.getEndPoint().y;
 
         float x3 = this.pos.x;
         float y3 = this.pos.y;

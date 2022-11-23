@@ -3,10 +3,7 @@ package com.apet2929.clothsim;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -19,23 +16,26 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     SpriteBatch sb;
     ShapeRenderer sr;
     Texture img;
+    Texture img2;
     ShaderProgram lightShader;
     ShaderProgram basicShader;
 
     Vector2 mousePos;
     Mesh mesh;
     Mesh lightingMesh;
-    Wall[] walls;
-    Ray ray;
+    ArrayList<LightBlocker> walls;
+    LightSource lightSource;
 
     @Override
     public void create() {
+//        ShaderProgram.pedantic = false;
         sb = new SpriteBatch();
 
         lightShader = loadShader("red");
         basicShader = loadShader("basic");
 
-        img = new Texture(Gdx.files.internal("badlogic.jpg"));
+        img = new Texture(Gdx.files.internal("grass.PNG"));
+        img2 = new Texture(Gdx.files.internal("tree.png"));
         mousePos = new Vector2(0,0);
         mesh = new Mesh(true, 4, 6, VertexAttribute.Position(), VertexAttribute.TexCoords(0));
         mesh.setVertices(new float[] {
@@ -49,21 +49,19 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0});
         int w = Gdx.graphics.getWidth();
         int h = Gdx.graphics.getHeight();
-        walls = new Wall[]{
-                new Wall(new Vector2(0.1f*w, 0.1f*h), new Vector2(0.1f*w, 0.9f*h)),
-                new Wall(new Vector2(0.1f*w, 0.1f*h),  new Vector2(0.9f*w, 0.1f*h)),
-                new Wall(new Vector2(0.3f*w, 0.5f*h),  new Vector2(0.7f*w, 0.5f*h))
-        };
-        sr = new ShapeRenderer(1000, basicShader);
+        walls = new ArrayList<>();
+        walls.add(new Wall(new Vector2(0.1f*w, 0.1f*h), new Vector2(0.1f*w, 0.9f*h)));
+        walls.add(new Wall(new Vector2(0.1f*w, 0.1f*h), new Vector2(0.1f*w, 0.9f*h)));
+        walls.add(new Wall(new Vector2(0.1f*w, 0.1f*h),  new Vector2(0.9f*w, 0.1f*h)));
+        walls.add(new Wall(new Vector2(0.3f*w, 0.5f*h),  new Vector2(0.7f*w, 0.5f*h)));
+
+//        sr = new ShapeRenderer(1000, basicShader);
+        sr = new ShapeRenderer();
 //        sr.getTransformMatrix().setToScaling(SCALE,SCALE,1);
         sb.getTransformMatrix().setToScaling(SCALE,SCALE,1);
 
-        ray = new Ray(new Vector2(500,500),0);
-    }
-
-    public Mesh updateLightingMesh(Vector2 mousePos){
-        ArrayList<Float> vertices;
-        return null;
+        lightSource = new LightSource(100, 500, 500);
+//        l = new Ray(new Vector2(500,500),0);
     }
 
     private ShaderProgram loadShader(String name) {
@@ -78,11 +76,17 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         return shader;
     }
 
+    void bindImages(){
+        img2 = lightSource.getLightingMask();
+        img2.bind(1);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+    }
+
     @Override
     public void render() {
 //        ScreenUtils.clear(1,1,1,0);
 //        img.bind();
-        lightShader.bind();
+
         float[] mousePos = new float[]{
                 (float)Gdx.input.getX(),
                 (float)Gdx.graphics.getHeight() - Gdx.input.getY()
@@ -92,22 +96,50 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
                 (float)Gdx.graphics.getHeight()
         };
 
-        ray.pos.set(mousePos[0], mousePos[1]);
-        ray.cast(walls);
+        lightSource.setPos(mousePos[0], mousePos[1]);
+        lightSource.update(walls);
 
+        float[] lightColor = new float[]{0.5f, 0.5f, 0.5f, 1f};
+        float ambientLight = 0.2f;
+
+        lightShader.bind();
+        lightShader.setUniformi("u_texture", 0);
+        lightShader.setUniformi("u_tex2", 1);
+        bindImages();
         lightShader.setUniform2fv("u_screenRes", screenRes, 0, 2);
         lightShader.setUniform2fv("u_mousePos", mousePos, 0, 2);
+        lightShader.setUniform4fv("u_lightColor", lightColor, 0, 4);
+        lightShader.setUniformf("u_ambientLight", ambientLight);
         lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
+
+        sb.begin();
+        sb.setShader(lightShader);
+        sb.draw(img, 0,0);
+        sb.end();
 
         mesh.render(lightShader, GL20.GL_TRIANGLES);
         basicShader.setUniformMatrix("u_projModelView", sb.getTransformMatrix());
         sr.setAutoShapeType(true);
         sr.begin(ShapeRenderer.ShapeType.Line);
-        for(Wall wall : walls) wall.render(sr);
-        ray.render(sr);
-
+        for(LightBlocker wall : walls){
+            ((Wall)wall).render(sr);
+        }
+//        sr.set(ShapeRenderer.ShapeType.Filled);
+//        sr.polyline(lightSource.getLightingPolygon());
+//        lightSource.getLightingPolygon().render(basicShader, GL20.GL_LINES);
+//        lightSource.render(sr);
         sr.end();
 
+        sr.setColor(Color.BLUE);
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        float[] polygon = new float[]{
+                100, 100,
+                200, 400,
+                300, 100,
+        };
+
+        sr.polygon(polygon);
+        sr.end();
 
     }
 
