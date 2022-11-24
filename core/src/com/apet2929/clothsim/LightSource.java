@@ -1,14 +1,17 @@
 package com.apet2929.clothsim;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.PolygonRegion;
+import com.badlogic.gdx.graphics.g2d.PolygonSprite;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.ShortArray;
 
 import java.util.ArrayList;
 
@@ -18,13 +21,17 @@ public class LightSource {
     private ArrayList<Ray> rays;
     private Vector2 pos;
     private Rectangle lightingMaskRect;
+    private PolygonSprite polygonSprite;
+    private PolygonSpriteBatch psb;
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
         pos = new Vector2(x,y);
+        float incRot = 360.0f / numRays;
         for (int i = 0; i < numRays; i++) {
-            rays.add(new Ray(pos, (float)(360*i)/numRays));
+            rays.add(new Ray(pos, incRot*i));
         }
+        psb = new PolygonSpriteBatch();
     }
 
     public void setPos(float x, float y){
@@ -34,35 +41,45 @@ public class LightSource {
         }
     }
 
+    public Vector2 getTopLeft(){
+        return new Vector2(this.lightingMaskRect.x, this.lightingMaskRect.y);
+    }
+
+    public Vector2 getCenter(){
+        return new Vector2(this.pos.x - this.lightingMaskRect.x, this.pos.y - this.lightingMaskRect.y);
+    }
+
     public void update(ArrayList<LightBlocker> walls){
         for (Ray ray : rays) {
             ray.cast(walls);
         }
+        this.polygonSprite = getLightingMask();
     }
 
-    public Texture getLightingMask(){
-        Pixmap pixmap = new Pixmap(160, 160, Pixmap.Format.RGBA8888);
-        pixmap.setBlending(Pixmap.Blending.None);
-        pixmap.setColor(0,1,0,0);
-        pixmap.fill();
+    private Texture getWhiteTexture(){
+        Pixmap pixmap = new Pixmap(1,1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1,1,1,1);
-        pixmap.fillRectangle(20,20,100,100);
-//        pixmap.setColor(1,0,0,1);
-//        pixmap.fillRectangle(5,5,60,20);
-//        float[] vertices = getLightingPolygon();
-//        Pixmap pixmap = new Pixmap((int)(lightingMaskRect.width), (int)(lightingMaskRect.height), Alpha);
-//        pixmap.setBlending(Pixmap.Blending.None);
-//
-//        int startX = (int) (pos.x - lightingMaskRect.x);
-//        int startY = (int) (pos.y - lightingMaskRect.y);
-//        pixmap.setColor(0,0,0,1);
-//        for (int i = 0; i < vertices.length-1; i+=2) {
-//            int endX = (int) (vertices[i] - lightingMaskRect.x);
-//            int endY = (int) (vertices[i+1] - lightingMaskRect.y);
-//            pixmap.drawLine(startX, startY, endX, endY);
-//        }
-
+        pixmap.fill();
         return new Texture(pixmap);
+    }
+
+    public PolygonSprite getLightingMask(){
+        float[] vertices = getLightingPolygon();
+        vertices = new float[]{
+                200, 200,
+                300, 500,
+                700,500,
+                400, 200,
+                600, 100,
+                300, 50
+        };
+        EarClippingTriangulator triangulator = new EarClippingTriangulator();
+        ShortArray triangles = triangulator.computeTriangles(vertices);
+        PolygonRegion reg = new PolygonRegion(new TextureRegion(getWhiteTexture()), vertices, triangles.toArray());
+        PolygonSprite sprite = new PolygonSprite(reg);
+        Vector2 c = this.getCenter();
+        sprite.setOrigin(c.x, c.y);
+        return sprite;
     }
 
     /**
@@ -105,11 +122,18 @@ public class LightSource {
     }
 
     public void render(ShapeRenderer sr){
-        for (Ray ray : rays) {
-            ray.render(sr);
+        psb.begin();
+        psb.setColor(1,1,1,1);
+        psb.draw(polygonSprite.getRegion(), polygonSprite.getX(), polygonSprite.getY());
+        psb.end();
+
+
+
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(Color.CYAN);
+        for (int i = 0; i < rays.size()-1; i+=2) {
+            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
         }
-//        for (int i = 0; i < rays.size()-1; i+=2) {
-//            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
-//        }
+        sr.end();
     }
 }

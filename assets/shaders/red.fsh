@@ -16,6 +16,7 @@ uniform vec4 u_lightColor;
 uniform float u_ambientLight;
 
 varying vec2 v_texCoord0;
+varying vec4 v_color;
 
 float calcLightIntensity(float dist){
     float intensity = 1 - tanh(dist);
@@ -30,7 +31,7 @@ void main()
     float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
     vec4 mask = texture2D(u_tex2, v_texCoord0);
-    gl_FragColor = tex1 * mask * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);
+    gl_FragColor = v_color * tex1 * mask * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);
 }
 
 

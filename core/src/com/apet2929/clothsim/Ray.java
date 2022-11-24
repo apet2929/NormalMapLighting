@@ -11,8 +11,9 @@ public class Ray {
     public Vector2 intersect;
     public float radius;
 
-    public Ray(Vector2 pos, float angle){
+    public Ray(Vector2 pos, double angleDeg){
         this.pos = pos;
+        double angle = angleDeg * Math.PI/180;
         this.dir = new Vector2((float) Math.cos(angle), (float) Math.sin(angle));
         this.radius = 400;
     }
