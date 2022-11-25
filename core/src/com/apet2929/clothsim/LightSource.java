@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.ShortArray;
 import java.util.ArrayList;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.Alpha;
+import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 public class LightSource {
     private ArrayList<Ray> rays;
@@ -23,6 +24,7 @@ public class LightSource {
     private Rectangle lightingMaskRect;
     private PolygonSprite polygonSprite;
     private PolygonSpriteBatch psb;
+    EarClippingTriangulator triangulator;
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
@@ -32,6 +34,7 @@ public class LightSource {
             rays.add(new Ray(pos, incRot*i));
         }
         psb = new PolygonSpriteBatch();
+        triangulator = new EarClippingTriangulator();
     }
 
     public void setPos(float x, float y){
@@ -42,7 +45,7 @@ public class LightSource {
     }
 
     public Vector2 getTopLeft(){
-        return new Vector2(this.lightingMaskRect.x, this.lightingMaskRect.y);
+        return new Vector2(this.polygonSprite.getX(), this.polygonSprite.getY());
     }
 
     public Vector2 getCenter(){
@@ -56,7 +59,7 @@ public class LightSource {
         this.polygonSprite = getLightingMask();
     }
 
-    private Texture getWhiteTexture(){
+    public Texture getWhiteTexture(){
         Pixmap pixmap = new Pixmap(1,1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1,1,1,1);
         pixmap.fill();
@@ -65,21 +68,31 @@ public class LightSource {
 
     public PolygonSprite getLightingMask(){
         float[] vertices = getLightingPolygon();
-        vertices = new float[]{
-                200, 200,
-                300, 500,
-                700,500,
-                400, 200,
-                600, 100,
-                300, 50
-        };
-        EarClippingTriangulator triangulator = new EarClippingTriangulator();
+
         ShortArray triangles = triangulator.computeTriangles(vertices);
         PolygonRegion reg = new PolygonRegion(new TextureRegion(getWhiteTexture()), vertices, triangles.toArray());
         PolygonSprite sprite = new PolygonSprite(reg);
         Vector2 c = this.getCenter();
         sprite.setOrigin(c.x, c.y);
+
         return sprite;
+    }
+
+    public Texture getLightingMask2(){
+        float[] vertices = getLightingPolygon();
+        Pixmap pixmap = new Pixmap((int) lightingMaskRect.width, (int) lightingMaskRect.height, RGBA8888);
+        pixmap.setColor(1,1,1,1);
+        short[] triangles = triangulator.computeTriangles(vertices).toArray();
+        for (int i = 0; i < triangles.length-2; i+=3) {
+            // vertex indexes
+            int i1 = triangles[i];
+            int i2 = triangles[i+1];
+            int i3 = triangles[i+2];
+
+            pixmap.fillTriangle((int) vertices[i1], (int) vertices[i1+1], (int) vertices[i2], (int) vertices[i2+1], (int) vertices[i3], (int) vertices[i3+1]);
+        }
+
+        return new Texture(pixmap);
     }
 
     /**
@@ -123,17 +136,17 @@ public class LightSource {
 
     public void render(ShapeRenderer sr){
         psb.begin();
-        psb.setColor(1,1,1,1);
+        psb.setColor(1,1,1,0.2f);
+
         psb.draw(polygonSprite.getRegion(), polygonSprite.getX(), polygonSprite.getY());
         psb.end();
 
 
-
-        sr.begin(ShapeRenderer.ShapeType.Filled);
-        sr.setColor(Color.CYAN);
-        for (int i = 0; i < rays.size()-1; i+=2) {
-            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
-        }
-        sr.end();
+//        sr.begin(ShapeRenderer.ShapeType.Filled);
+//        sr.setColor(Color.CYAN);
+//        for (int i = 0; i < rays.size()-1; i+=2) {
+//            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
+//        }
+//        sr.end();
     }
 }
