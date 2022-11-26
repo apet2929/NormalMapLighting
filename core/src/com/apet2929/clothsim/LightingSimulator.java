@@ -73,6 +73,8 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         lightSource = new LightSource(500, 500, 500);
 //        l = new Ray(new Vector2(500,500),0);
+        computeNormal(255,137,128);
+        computeNormal(255/2,255/2,250);
     }
 
     private ShaderProgram loadShader(String name) {
@@ -174,6 +176,16 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
 
 
+    }
+
+    void computeNormal(int r, int g, int b){
+        float x = r/255.0f;
+        float y = g/255.0f;
+        x -= 0.5f;
+        y -= 0.5f;
+        x *= 2;
+        y *= 2;
+        System.out.println("x,y = {" + x + ", " + y + "}");
     }
 
     private void bindLightingShader(float[] mousePos, float[] screenRes, float[] lightColor, float ambientLight, ShaderProgram lightShader) {
