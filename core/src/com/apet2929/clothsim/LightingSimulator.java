@@ -22,13 +22,14 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     PolygonSpriteBatch sb;
     ShapeRenderer sr;
     TextureRegion img;
+    Texture normal_cube;
     Texture img2;
     ShaderProgram lightShader;
     ShaderProgram basicShader;
+    ShaderProgram meshShader;
 
     Vector2 mousePos;
     Mesh mesh;
-    Mesh lightingMesh;
     ArrayList<LightBlocker> walls;
     LightSource lightSource;
 
@@ -39,21 +40,24 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         lightShader = loadShader("red");
         basicShader = loadShader("basic");
+        meshShader = loadShader("red","mesh");
 
         img = new TextureRegion(new Texture(Gdx.files.internal("grass.PNG")));
 
         img2 = new Texture(Gdx.files.internal("tree.png"));
+        normal_cube = new Texture(Gdx.files.internal("normal_cube.png"));
         mousePos = new Vector2(0,0);
-        mesh = new Mesh(true, 4, 6, VertexAttribute.Position(), VertexAttribute.ColorUnpacked());
-        mesh.setVertices(new float[] {
-                -1f, -1f, 0, 0, 0, 0, 1,
-                1f, -1f, 0, 0, 0, 0, 1,
-                1f, 1f, 0, 0, 0, 0, 1,
-                -1f, 1f, 0, 0, 0, 0, 1,
-        });
-        lightingMesh = new Mesh(false, 1000, 1000, VertexAttribute.Position());
 
+        VertexAttribute attribute = new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE);
+        mesh = new Mesh(true, 4, 6, attribute, VertexAttribute.ColorUnpacked());
+        mesh.setVertices(new float[] {
+                -1f, -1f, 0.5f, 1, 1, 1,
+                1f, -1f, 1, 0.5f, 1, 1,
+                1f, 1f, 1, 1, 0.5f, 1,
+                -1f, 1f, 0.5f, 1, 1, 1,
+        });
         mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0});
+
         int w = Gdx.graphics.getWidth();
         int h = Gdx.graphics.getHeight();
         walls = new ArrayList<>();
@@ -72,7 +76,11 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     }
 
     private ShaderProgram loadShader(String name) {
-        ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/" + name +".vsh"), Gdx.files.internal("shaders/"+name+".fsh"));
+        return loadShader(name, name);
+    }
+    private ShaderProgram loadShader(String vertName, String fragName) {
+        ShaderProgram.pedantic = false;
+        ShaderProgram shader = new ShaderProgram(Gdx.files.internal("shaders/" + vertName +".vsh"), Gdx.files.internal("shaders/"+fragName+".fsh"));
         if(shader.isCompiled()){
             System.out.println("Shader works!");
 
@@ -104,7 +112,6 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         /* Render mask elements. */
 
-        /* Render mask elements. */
         PolygonRegion pr = lightSource.getLightingMask().getRegion();
         sb.begin();
         Gdx.gl.glDepthMask(true);
@@ -141,22 +148,19 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
 //        lightSource.render(sr);
 
-        lightShader.bind();
-        lightShader.setUniform2fv("u_screenRes", screenRes, 0, 2);
-        lightShader.setUniform2fv("u_mousePos", mousePos, 0, 2);
-        lightShader.setUniform4fv("u_lightColor", lightColor, 0, 4);
-        lightShader.setUniformf("u_ambientLight", ambientLight);
-        lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
 
+//        drawMasked();
 
-        drawMasked();
+        Gdx.gl.glDepthMask(false);
 
+        bindLightingShader(mousePos, screenRes, lightColor, ambientLight, meshShader);
         mesh.render(lightShader, GL20.GL_TRIANGLES);
+
+        bindLightingShader(mousePos, screenRes, lightColor, ambientLight, lightShader);
         sb.begin();
         sb.setShader(lightShader);
-        sb.draw(img, 300,300,200,200);
+        sb.draw(img, 300,300, 200, 200);
         sb.end();
-
 
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
@@ -170,6 +174,18 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
 
 
+    }
+
+    private void bindLightingShader(float[] mousePos, float[] screenRes, float[] lightColor, float ambientLight, ShaderProgram lightShader) {
+        lightShader.bind();
+        lightShader.setUniform2fv("u_screenRes", screenRes, 0, 2);
+        lightShader.setUniform2fv("u_mousePos", mousePos, 0, 2);
+        lightShader.setUniform4fv("u_lightColor", lightColor, 0, 4);
+        lightShader.setUniformf("u_ambientLight", ambientLight);
+        lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
+        normal_cube.bind(1);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+        lightShader.setUniformi("u_normalMap",1);
     }
 
     @Override
