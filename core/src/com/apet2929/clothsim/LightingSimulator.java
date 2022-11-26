@@ -151,7 +151,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 //        lightSource.render(sr);
 
 
-//        drawMasked();
+        drawMasked();
 
         Gdx.gl.glDepthMask(false);
 
@@ -195,6 +195,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightShader.setUniform4fv("u_lightColor", lightColor, 0, 4);
         lightShader.setUniformf("u_ambientLight", ambientLight);
         lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
+        lightShader.setUniformf("u_lightRadiusPixels", lightSource.getRadius());
         normal_cube.bind(1);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
         lightShader.setUniformi("u_normalMap",1);

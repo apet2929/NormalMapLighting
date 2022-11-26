@@ -24,17 +24,26 @@ public class LightSource {
     private Rectangle lightingMaskRect;
     private PolygonSprite polygonSprite;
     private PolygonSpriteBatch psb;
+    private float radius;
     EarClippingTriangulator triangulator;
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
         pos = new Vector2(x,y);
+        radius = 400;
         float incRot = 360.0f / numRays;
         for (int i = 0; i < numRays; i++) {
-            rays.add(new Ray(pos, incRot*i));
+            rays.add(new Ray(pos, incRot*i, radius));
         }
         psb = new PolygonSpriteBatch();
         triangulator = new EarClippingTriangulator();
+    }
+
+    public void setRadius(float radius){
+        this.radius = radius;
+        for (Ray ray : rays) {
+            ray.radius = radius;
+        }
     }
 
     public void setPos(float x, float y){
@@ -148,5 +157,9 @@ public class LightSource {
 //            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
 //        }
 //        sr.end();
+    }
+
+    public float getRadius() {
+        return radius;
     }
 }

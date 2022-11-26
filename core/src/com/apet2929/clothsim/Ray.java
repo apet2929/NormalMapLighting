@@ -11,11 +11,11 @@ public class Ray {
     public Vector2 intersect;
     public float radius;
 
-    public Ray(Vector2 pos, double angleDeg){
+    public Ray(Vector2 pos, double angleDeg, float radius){
         this.pos = pos;
         double angle = angleDeg * Math.PI/180;
         this.dir = new Vector2((float) Math.cos(angle), (float) Math.sin(angle));
-        this.radius = 400;
+        this.radius = radius;
     }
 
     public void cast(ArrayList<LightBlocker> walls){
