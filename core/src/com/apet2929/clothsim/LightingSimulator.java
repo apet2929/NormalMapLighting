@@ -6,8 +6,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -15,15 +13,13 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayList;
 
-import static com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Filled;
-
 public class LightingSimulator  extends ApplicationAdapter implements InputProcessor {
     private static final float SCALE = 1f;
     PolygonSpriteBatch sb;
     ShapeRenderer sr;
-    TextureRegion img;
-    Texture normal_cube;
-    Texture img2;
+    TextureWithNormal cube;
+    TextureWithNormal triangle;
+    TextureWithNormal bird;
     ShaderProgram lightShader;
     ShaderProgram basicShader;
     ShaderProgram meshShader;
@@ -42,19 +38,19 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         basicShader = loadShader("basic");
         meshShader = loadShader("red","mesh");
 
-        img = new TextureRegion(new Texture(Gdx.files.internal("grass.PNG")));
-
-        img2 = new Texture(Gdx.files.internal("tree.png"));
-        normal_cube = new Texture(Gdx.files.internal("normal_cube.png"));
+        triangle = new TextureWithNormal("triangle.png", "normal_triangle.png", 10);
+        cube = new TextureWithNormal("grass.PNG", "normal_cube.png", 10);
+        bird = new TextureWithNormal("coco.png", "coco_normal.png", 10);
         mousePos = new Vector2(0,0);
 
         VertexAttribute attribute = new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE);
         mesh = new Mesh(true, 4, 6, attribute, VertexAttribute.ColorUnpacked());
+        float mc = 0.3f;
         mesh.setVertices(new float[] {
-                -1f, -1f, 0.5f, 1, 1, 1,
-                1f, -1f, 1, 0.5f, 1, 1,
-                1f, 1f, 1, 1, 0.5f, 1,
-                -1f, 1f, 0.5f, 1, 1, 1,
+                -1f, -1f, mc,mc,mc, 1,
+                1f, -1f, mc,mc,mc, 1,
+                1f, 1f, mc,mc,mc, 1,
+                -1f, 1f, mc,mc,mc, 1,
         });
         mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0});
 
@@ -63,16 +59,14 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         walls = new ArrayList<>();
         walls.add(new Wall(new Vector2(0.1f*w, 0.4f*h), new Vector2(0.5f*w, 0.9f*h)));
         walls.add(new Wall(new Vector2(0.2f*w, 0.1f*h), new Vector2(0.1f*w, 0.9f*h)));
-        walls.add(new Wall(new Vector2(0.4f*w, 0.4f*h),  new Vector2(0.9f*w, 0.1f*h)));
+//        walls.add(new Wall(new Vector2(0.4f*w, 0.4f*h),  new Vector2(0.9f*w, 0.1f*h)));
         walls.add(new Wall(new Vector2(0.3f*w, 0.5f*h),  new Vector2(0.7f*w, 0.5f*h)));
 
-//        sr = new ShapeRenderer(1000, basicShader);
         sr = new ShapeRenderer();
-//        sr.getTransformMatrix().setToScaling(SCALE,SCALE,1);
         sb.getTransformMatrix().setToScaling(SCALE,SCALE,1);
 
         lightSource = new LightSource(500, 500, 500);
-//        l = new Ray(new Vector2(500,500),0);
+
         computeNormal(255,137,128);
         computeNormal(255/2,255/2,250);
     }
@@ -99,7 +93,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 //        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
     }
 
-    void drawMasked(){
+    void enableLightMask(){
         /* Clear our depth buffer info from previous frame. */
         Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 
@@ -131,8 +125,10 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     @Override
     public void render() {
         ScreenUtils.clear(0,0,0,1);
-//        img.bind();
 
+        // define uniform data to be given to light shader
+        float[] lightColor = new float[]{1f, 0.5f, 0.5f, 1f};
+        float ambientLight = 0.2f;
         float[] mousePos = new float[]{
                 (float)Gdx.input.getX(),
                 (float)Gdx.graphics.getHeight() - Gdx.input.getY()
@@ -145,27 +141,32 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightSource.setPos(mousePos[0], mousePos[1]);
         lightSource.update(walls);
 
-        float[] lightColor = new float[]{0.5f, 0.5f, 0.5f, 1f};
-        float ambientLight = 0.2f;
 
-//        lightSource.render(sr);
+        triangle.rotation += 1;
 
-
-        drawMasked();
-
-        Gdx.gl.glDepthMask(false);
-
+        /* Draw background */
         bindLightingShader(mousePos, screenRes, lightColor, ambientLight, meshShader);
-        mesh.render(lightShader, GL20.GL_TRIANGLES);
+        mesh.render(meshShader, GL20.GL_TRIANGLES);
+
+        enableLightMask();
+        /* Draw stuff you want to light mask to affect */
 
         bindLightingShader(mousePos, screenRes, lightColor, ambientLight, lightShader);
         sb.begin();
         sb.setShader(lightShader);
-        sb.draw(img, 300,300, 200, 200);
+        cube.render(sb, lightShader, 200, 200);
+        triangle.render(sb, lightShader, 100,100);
+        bird.render(sb, lightShader, 300,300);
         sb.end();
 
-        Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
 
+        disableMask(); // disables light mask
+        /* Draw foreground objects unaffected by light mask */
+        drawWalls();
+
+    }
+
+    private void drawWalls() {
         sr.setAutoShapeType(true);
         sr.begin(ShapeRenderer.ShapeType.Line);
         for(LightBlocker wall : walls){
@@ -173,9 +174,10 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         }
 
         sr.end();
+    }
 
-
-
+    private static void disableMask() {
+        Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
     }
 
     void computeNormal(int r, int g, int b){
@@ -196,10 +198,14 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightShader.setUniformf("u_ambientLight", ambientLight);
         lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
         lightShader.setUniformf("u_lightRadiusPixels", lightSource.getRadius());
-        normal_cube.bind(1);
-        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-        lightShader.setUniformi("u_normalMap",1);
+
     }
+
+    /*
+    Hi I'm Andrew.
+
+Surprisingly, I like to code. It's my hobby. During the break I implemented a lighting system in LWJGL, a Java library that provides methods to interface with OpenGL. It was a lot of fun, and I learned a lot about shaders in the process. I'm interested in Quantum Computing, it's just way too cool to be real. I'm on the AI subteam of RHIT Robomasters, and I want to try out the Computer Security club. A movie I really enjoyed recently was Good Will Hunting.
+     */
 
     @Override
     public void dispose() {

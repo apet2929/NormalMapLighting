@@ -27,17 +27,21 @@ float calcLightIntensity(vec2 dist){
 
 void main()
 {
+    float brightness = 2;
     vec2 diff = (u_mousePos - gl_FragCoord.xy)/u_screenRes;
 
     float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
 
     vec4 n = texture2D(u_normalMap, v_texCoord0);
-    vec3 r = vec3(diff.xy, 0.2);
+    vec3 r = vec3(diff.xy,0.1);
     vec3 normal = vec3(2 * (n.x - 0.5), 2 * (n.y - 0.5), 2 * (n.z - 0.5));
-    float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.0, 1.0);
+    float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
 
-    gl_FragColor = (u_lightColor * tex1 * normalFalloff * calcLightIntensity(diff)) + (u_ambientLight * tex1);
+//    gl_FragColor = n;
+//    gl_FragColor = normalize(gl_FragCoord);
+
+    gl_FragColor = (brightness * u_lightColor * tex1 * normalFalloff * calcLightIntensity(diff)) + (u_ambientLight * tex1);
 }
 
 
