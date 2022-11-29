@@ -9,7 +9,7 @@
 //uniform sampler2D textures[3]; // 0 => texture, 1 => normal map, 2 => light mask
 
 uniform vec2 u_screenRes;
-uniform vec2 u_mousePos;
+uniform vec2 u_lightPos;
 uniform vec4 u_lightColor;
 uniform float u_ambientLight;
 
@@ -23,8 +23,7 @@ float calcLightIntensity(float dist){
 
 void main()
 {
-    vec2 diff = (u_mousePos - gl_FragCoord.xy)/u_screenRes;
-
+    vec2 diff = (u_lightPos - gl_FragCoord.xy)/u_screenRes;
     float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
     gl_FragColor = v_color * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);
 //    gl_FragColor = v_color * tex1 * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);

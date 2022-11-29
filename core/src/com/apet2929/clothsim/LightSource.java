@@ -2,10 +2,8 @@ package com.apet2929.clothsim;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.PolygonRegion;
-import com.badlogic.gdx.graphics.g2d.PolygonSprite;
-import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.Polygon;
@@ -23,9 +21,12 @@ public class LightSource {
     private Vector2 pos;
     private Rectangle lightingMaskRect;
     private PolygonSprite polygonSprite;
-    private PolygonSpriteBatch psb;
     private float radius;
+    private Color color;
+    private float ambientLight;
     EarClippingTriangulator triangulator;
+
+
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
@@ -35,8 +36,35 @@ public class LightSource {
         for (int i = 0; i < numRays; i++) {
             rays.add(new Ray(pos, incRot*i, radius));
         }
-        psb = new PolygonSpriteBatch();
+
         triangulator = new EarClippingTriangulator();
+        color = Color.WHITE;
+        ambientLight = 0.2f;
+    }
+
+    /**
+     * @param r,g,b,a the value for the red, green, blue, and alpha channels in range [0,1]
+     */
+    public void setColor(float r, float g, float b, float a){
+        color.set(r,g,b,a);
+    }
+
+    public void bindShader(ShaderProgram shader, Batch batch){
+        float[] lightPos = new float[]{this.pos.x, this.pos.y};
+        float[] screenRes = new float[]{
+                (float)Gdx.graphics.getWidth(),
+                (float)Gdx.graphics.getHeight()
+        };
+        float[] lightColor = new float[]{
+                color.r, color.g, color.b, color.a
+        };
+        shader.bind();
+        shader.setUniform2fv("u_screenRes", screenRes, 0, 2);
+        shader.setUniform2fv("u_lightPos", lightPos, 0, 2);
+        shader.setUniform4fv("u_lightColor", lightColor, 0, 4);
+        shader.setUniformf("u_ambientLight", ambientLight);
+        shader.setUniformMatrix("u_projTrans", batch.getTransformMatrix());
+        shader.setUniformf("u_lightRadiusPixels", radius);
     }
 
     public void setRadius(float radius){
@@ -46,11 +74,24 @@ public class LightSource {
         }
     }
 
+    public void setAmbientLight(float ambientLight) {
+        this.ambientLight = ambientLight;
+    }
+
     public void setPos(float x, float y){
         pos.set(x,y);
         for (Ray ray : rays) {
             ray.pos = pos;
         }
+    }
+
+    public void drawMask(PolygonSpriteBatch sb){
+        PolygonRegion pr = getLightingMask().getRegion();
+        sb.begin();
+        Gdx.gl.glDepthMask(true);
+        sb.setColor(1,1,1,1);
+        sb.draw(pr, getTopLeft().x, getTopLeft().y);
+        sb.end();
     }
 
     public Vector2 getTopLeft(){
@@ -141,22 +182,6 @@ public class LightSource {
         lightingMaskRect = new Rectangle(min_x, min_y, max_x - min_x, max_y - min_y);
 
         return vertices;
-    }
-
-    public void render(ShapeRenderer sr){
-        psb.begin();
-        psb.setColor(1,1,1,0.2f);
-
-        psb.draw(polygonSprite.getRegion(), polygonSprite.getX(), polygonSprite.getY());
-        psb.end();
-
-
-//        sr.begin(ShapeRenderer.ShapeType.Filled);
-//        sr.setColor(Color.CYAN);
-//        for (int i = 0; i < rays.size()-1; i+=2) {
-//            sr.line(rays.get(i).intersect, rays.get(i+1).intersect);
-//        }
-//        sr.end();
     }
 
     public float getRadius() {

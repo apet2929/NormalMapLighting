@@ -66,6 +66,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         sb.getTransformMatrix().setToScaling(SCALE,SCALE,1);
 
         lightSource = new LightSource(500, 500, 500);
+        lightSource.setColor(1,0.5f,0.5f,1);
 
         computeNormal(255,137,128);
         computeNormal(255/2,255/2,250);
@@ -107,13 +108,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         Gdx.gl.glColorMask(false, false, false, false);
 
         /* Render mask elements. */
-
-        PolygonRegion pr = lightSource.getLightingMask().getRegion();
-        sb.begin();
-        Gdx.gl.glDepthMask(true);
-        sb.setColor(1,1,1,1);
-        sb.draw(pr, lightSource.getTopLeft().x, lightSource.getTopLeft().y);
-        sb.end();
+        lightSource.drawMask(sb);
 
         /* Enable RGBA color writing. */
         Gdx.gl.glColorMask(true, true, true, true);
@@ -127,31 +122,21 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         ScreenUtils.clear(0,0,0,1);
 
         // define uniform data to be given to light shader
-        float[] lightColor = new float[]{1f, 0.5f, 0.5f, 1f};
-        float ambientLight = 0.2f;
-        float[] mousePos = new float[]{
-                (float)Gdx.input.getX(),
-                (float)Gdx.graphics.getHeight() - Gdx.input.getY()
-        };
-        float[] screenRes = new float[]{
-                (float)Gdx.graphics.getWidth(),
-                (float)Gdx.graphics.getHeight()
-        };
-
-        lightSource.setPos(mousePos[0], mousePos[1]);
+        lightSource.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
         lightSource.update(walls);
 
 
         triangle.rotation += 1;
 
         /* Draw background */
-        bindLightingShader(mousePos, screenRes, lightColor, ambientLight, meshShader);
+        lightSource.bindShader(meshShader, sb);
         mesh.render(meshShader, GL20.GL_TRIANGLES);
 
         enableLightMask();
         /* Draw stuff you want to light mask to affect */
 
-        bindLightingShader(mousePos, screenRes, lightColor, ambientLight, lightShader);
+        lightSource.bindShader(lightShader, sb);
+
         sb.begin();
         sb.setShader(lightShader);
         cube.render(sb, lightShader, 200, 200);
@@ -198,7 +183,6 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightShader.setUniformf("u_ambientLight", ambientLight);
         lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
         lightShader.setUniformf("u_lightRadiusPixels", lightSource.getRadius());
-
     }
 
     /*
