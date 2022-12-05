@@ -45,7 +45,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         VertexAttribute attribute = new VertexAttribute(VertexAttributes.Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE);
         mesh = new Mesh(true, 4, 6, attribute, VertexAttribute.ColorUnpacked());
-        float mc = 0.3f;
+        float mc = 0.1f;
         mesh.setVertices(new float[] {
                 -1f, -1f, mc,mc,mc, 1,
                 1f, -1f, mc,mc,mc, 1,
@@ -66,7 +66,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         sb.getTransformMatrix().setToScaling(SCALE,SCALE,1);
 
         lightSource = new LightSource(500, 500, 500);
-        lightSource.setColor(1,0.5f,0.5f,1);
+        lightSource.setColor(0.7f,0.7f,0.7f,1f);
 
         computeNormal(255,137,128);
         computeNormal(255/2,255/2,250);
@@ -141,7 +141,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         sb.setShader(lightShader);
         cube.render(sb, lightShader, 200, 200);
         triangle.render(sb, lightShader, 100,100);
-        bird.render(sb, lightShader, 300,300);
+        bird.render(sb, lightShader, 400,300);
         sb.end();
 
 

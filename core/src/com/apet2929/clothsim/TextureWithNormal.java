@@ -47,9 +47,8 @@ public class TextureWithNormal {
         normal.bind(1);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
         shader.setUniformi("u_normalMap",1);
-        shader.setUniformf("u_rotation", rotation);
+        shader.setUniformf("u_rotation", (float) (rotation * Math.PI/180f));
         shader.setUniform2fv("u_textureResolution", new float[]{16,16}, 0, 2);
-        shader.setUniform2fv("u_rotOrigin", new float[]{4,2}, 0, 2);
         sb.draw(texture, x, y, texture.getWidth()/2, texture.getHeight()/2,texture.getWidth(),texture.getHeight(),
                 width / texture.getWidth(),height / texture.getHeight(),rotation,0,0,texture.getWidth(),texture.getHeight(),false,false);
         sb.flush();

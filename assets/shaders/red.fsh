@@ -15,6 +15,7 @@ uniform vec2 u_lightPos;
 uniform vec4 u_lightColor;
 uniform float u_ambientLight;
 uniform float u_lightRadiusPixels;
+uniform float u_rotation;
 
 varying vec2 v_texCoord0;
 varying vec4 v_color;
@@ -22,7 +23,15 @@ varying vec4 v_color;
 float calcLightIntensity(vec2 dist){
     float distPixels = length(vec2(dist.x * u_screenRes.x, dist.y * u_screenRes.y));
     float percentRadius = distPixels / u_lightRadiusPixels;
-    return 1 - percentRadius;
+    return 1 - (percentRadius);
+}
+
+vec3 get_normal(){
+    vec4 n = texture2D(u_normalMap, v_texCoord0);
+    vec3 normal = vec3(2 * (n.x - 0.5), 2 * (n.y - 0.5), 2 * (n.z - 0.5));
+    float x = normal.x * cos(u_rotation) - normal.y * sin(u_rotation);
+    float y = normal.x * sin(u_rotation) + normal.y * cos(u_rotation);
+    return vec3(x,y, normal.z);
 }
 
 void main()
@@ -33,9 +42,8 @@ void main()
     float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
 
-    vec4 n = texture2D(u_normalMap, v_texCoord0);
     vec3 r = vec3(diff.xy,0.1);
-    vec3 normal = vec3(2 * (n.x - 0.5), 2 * (n.y - 0.5), 2 * (n.z - 0.5));
+    vec3 normal = get_normal();
     float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
 
 //    gl_FragColor = n;
