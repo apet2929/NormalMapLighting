@@ -19,6 +19,8 @@ public class Simulator extends ApplicationAdapter implements InputProcessor {
 	static final int RUNNING = 2;
 	static final int PAUSED = 3;
 	static final int NUM_STATES = 4;
+	public static final int WIDTH = 1200;
+	public static final int HEIGHT = 1000;
 
 	SpriteBatch batch;
 	ShapeRenderer sr;

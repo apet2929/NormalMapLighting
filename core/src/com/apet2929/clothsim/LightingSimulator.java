@@ -52,6 +52,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
                 1f, 1f, mc,mc,mc, 1,
                 -1f, 1f, mc,mc,mc, 1,
         });
+
         mesh.setIndices(new short[] {0, 1, 2, 2, 3, 0});
 
         int w = Gdx.graphics.getWidth();
@@ -184,12 +185,6 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
         lightShader.setUniformf("u_lightRadiusPixels", lightSource.getRadius());
     }
-
-    /*
-    Hi I'm Andrew.
-
-Surprisingly, I like to code. It's my hobby. During the break I implemented a lighting system in LWJGL, a Java library that provides methods to interface with OpenGL. It was a lot of fun, and I learned a lot about shaders in the process. I'm interested in Quantum Computing, it's just way too cool to be real. I'm on the AI subteam of RHIT Robomasters, and I want to try out the Computer Security club. A movie I really enjoyed recently was Good Will Hunting.
-     */
 
     @Override
     public void dispose() {

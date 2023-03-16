@@ -5,6 +5,6 @@ uniform mat4 u_projTrans;
 
 varying vec4 v_col;
 void main() {
-    gl_Position = u_projModelView * a_position;
+    gl_Position = a_position;
     v_col = a_color;
 }

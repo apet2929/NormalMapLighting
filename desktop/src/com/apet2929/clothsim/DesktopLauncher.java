@@ -8,7 +8,7 @@ import com.apet2929.clothsim.Simulator;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
-		config.setWindowedMode(1000,1000);
+		config.setWindowedMode(Simulator.WIDTH,Simulator.HEIGHT);
 		config.setForegroundFPS(120);
 		config.setTitle("ClothSimulator");
 		new Lwjgl3Application(new OilSlick(), config);

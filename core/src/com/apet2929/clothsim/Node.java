@@ -32,7 +32,7 @@ public class Node implements Serializable {
     }
 
     public Node(float x, float y){
-        this(x, y, 2f, 0.05f);
+        this(x, y, 10f, 0.05f);
     }
 
     public Node(float x, float y, boolean fixed){

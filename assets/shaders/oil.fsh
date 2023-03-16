@@ -6,16 +6,15 @@ precision mediump float;
 #define MAX_WAVELENGTH = 740
 
 
-varying vec4 v_color;
-varying vec2 v_texCoords;
+varying float v_depth;
 
-uniform sampler2D u_texture;
 uniform mat4 u_projTrans;
 uniform vec2 u_depthRange;
 uniform float u_indexOfRefraction;
 uniform float u_maxThickness;
 uniform float u_saturation;
 uniform float u_intensity;
+uniform vec2 u_resolution;
 
 vec3 wavelengthToHSV(float wavelength, float intensity){
     float maxRed = 740.0;
@@ -47,19 +46,22 @@ vec4 wavelengthToRGB(float wavelength, float intensity) {
 }
 
 void main() {
-    vec3 color = texture2D(u_texture, v_texCoords).rgb;
-
-    float thickness = color.r * u_maxThickness;
+    float thickness = v_depth * u_maxThickness;
     vec4 sum_color = vec4(0.0,0.0,0.0,1.0);
 
-    for(float i = 340.0; i < 740.0; i+= 5.0){
+    for(float i = 340.0; i < 740.0; i+= 1.0){
         float lambda_n = i / u_indexOfRefraction;
         float phi_total = PI + (2.0*thickness)*(2.0*PI)/lambda_n;
         float intensity = u_intensity * pow(cos(phi_total/2.0),2.0);
         vec4 slick_color = wavelengthToRGB(lambda_n, intensity);
-        sum_color += slick_color / 20.0;
+        sum_color += slick_color / 100.0;
+//        sum_color += slick_color;
+//        if(sum_color.x > 1) sum_color.x = 0;
+//        if(sum_color.y > 1) sum_color.y = 0;
+//        if(sum_color.z > 1) sum_color.z = 0;
     }
 
-
     gl_FragColor = sum_color;
+//    gl_FragColor = vec4(v_depth);
+
 }
