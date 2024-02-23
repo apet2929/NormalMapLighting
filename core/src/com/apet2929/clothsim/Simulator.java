@@ -180,6 +180,11 @@ public class Simulator extends ApplicationAdapter implements InputProcessor {
 		return true;
 	}
 
+	@Override
+	public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
 	void deleteNode(Node node){
 		nodes.remove(node);
 		ArrayList<Connection> toRemove = new ArrayList<>();

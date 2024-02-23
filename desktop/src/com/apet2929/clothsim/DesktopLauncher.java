@@ -11,6 +11,6 @@ public class DesktopLauncher {
 		config.setWindowedMode(Simulator.WIDTH,Simulator.HEIGHT);
 		config.setForegroundFPS(120);
 		config.setTitle("ClothSimulator");
-		new Lwjgl3Application(new OilSlick(), config);
+		new Lwjgl3Application(new LightingSimulator(), config);
 	}
 }

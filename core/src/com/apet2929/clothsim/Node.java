@@ -6,13 +6,13 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.awt.*;
-import java.io.Serial;
+//import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Node implements Serializable {
 
-    @Serial
+//    @Serial
     private static final long serialVersionUID = 1234L;
 
     public final float weight;
