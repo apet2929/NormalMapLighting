@@ -132,7 +132,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightSource.bindShader(meshShader, sb);
         mesh.render(meshShader, GL20.GL_TRIANGLES);
 
-        enableLightMask();
+//        enableLightMask();
         /* Draw stuff you want to light mask to affect */
 
         lightSource.bindShader(lightShader, sb);

@@ -47,22 +47,26 @@ public class LightSource {
     }
 
     public void bindShader(ShaderProgram shader, Batch batch){
-        float[] lightPos = new float[]{this.pos.x, this.pos.y, this.pos.z};
+//        float[] lightPos = new float[]{this.pos.x, this.pos.y, this.pos.z, 0f,0f,this.pos.z};
+        float[] lightPos = new float[]{500f,500f,this.pos.z, 3f,3f,this.pos.z};
         float[] screenRes = new float[]{
                 (float)Gdx.graphics.getWidth(),
                 (float)Gdx.graphics.getHeight()
         };
         float[] lightColor = new float[]{
-                color.r, color.g, color.b, color.a
+//                color.r, color.g, color.b, color.a
+                0f,0f,0f,0f,
+                1f,1f,1f,1f,
         };
         shader.bind();
         shader.setUniform2fv("u_screenRes", screenRes, 0, 2);
-        shader.setUniform2fv("u_lightPos", lightPos, 0, 3);
+        shader.setUniform2fv("u_lightPos", lightPos, 0, 6);
         shader.setUniformf("u_lightZ", this.pos.z); // setting the lightPos to be a Vec3 breaks opacity
-        shader.setUniform4fv("u_lightColor", lightColor, 0, 4);
+        shader.setUniform4fv("u_lightColor", lightColor, 0, 8);
         shader.setUniformf("u_ambientLight", ambientLight);
         shader.setUniformMatrix("u_projTrans", batch.getTransformMatrix());
         shader.setUniformf("u_lightRadiusPixels", radius);
+        shader.setUniformi("u_numLights", 2);
     }
 
     public void setRadius(float radius){
@@ -87,7 +91,7 @@ public class LightSource {
         PolygonRegion pr = getLightingMask().getRegion();
         sb.begin();
         Gdx.gl.glDepthMask(true);
-        sb.setColor(1,1,1,1);
+        sb.setColor(1,1,1,1-ambientLight);
         sb.draw(pr, getTopLeft().x, getTopLeft().y);
         sb.end();
     }
