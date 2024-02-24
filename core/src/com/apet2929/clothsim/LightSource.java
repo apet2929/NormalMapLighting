@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ShortArray;
 
 import java.util.ArrayList;
@@ -22,8 +23,6 @@ public class LightSource {
     private Color color;
     private float ambientLight;
     EarClippingTriangulator triangulator;
-
-
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
@@ -44,6 +43,36 @@ public class LightSource {
      */
     public void setColor(float r, float g, float b, float a){
         color.set(r,g,b,a);
+    }
+
+    public static void bindShader(ShaderProgram shader, Batch batch, ArrayList<LightSource> lSources){
+        float[] lightPos = new float[2 * lSources.size()];
+        float[] lightColor = new float[4 * lSources.size()];
+
+        float[] screenRes = new float[]{
+                (float)Gdx.graphics.getWidth(),
+                (float)Gdx.graphics.getHeight()
+        };
+
+        for (int i = 0; i < lSources.size(); i++) {
+            lightPos[2*i] = lSources.get(i).pos.x;
+            lightPos[2*i+1] = lSources.get(i).pos.y;
+            lightColor[4*i] = lSources.get(i).color.r;
+            lightColor[4*i+1] = lSources.get(i).color.g;
+            lightColor[4*i+2] = lSources.get(i).color.b;
+            lightColor[4*i+3] = lSources.get(i).color.a;
+        }
+
+        shader.bind();
+        shader.setUniformMatrix("u_projTrans", batch.getTransformMatrix());
+        shader.setUniform2fv("u_screenRes", screenRes, 0, 2);
+        shader.setUniformi("u_numLights", lSources.size());
+        shader.setUniform2fv("u_lightPos", lightPos, 0, 2*lSources.size());
+        shader.setUniform4fv("u_lightColor", lightColor, 0, 4*lSources.size());
+        shader.setUniformf("u_lightZ", lSources.get(0).pos.z); // setting the lightPos to be a Vec3 breaks opacity
+        shader.setUniformf("u_ambientLight", lSources.get(0).ambientLight);
+        shader.setUniformf("u_lightRadiusPixels", lSources.get(0).radius);
+
     }
 
     public void bindShader(ShaderProgram shader, Batch batch){
@@ -84,6 +113,7 @@ public class LightSource {
         for (Ray ray : rays) {
             ray.pos = new Vector2(pos.x, pos.y);
         }
+        System.out.println("x,y = " + x + "," + y);
     }
 
     public void drawMask(PolygonSpriteBatch sb){

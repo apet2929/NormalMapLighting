@@ -27,7 +27,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     Vector2 mousePos;
     Mesh mesh;
     ArrayList<LightBlocker> walls;
-    LightSource lightSource;
+    ArrayList<LightSource> lightSources;
 
     @Override
     public void create() {
@@ -65,8 +65,18 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         sr = new ShapeRenderer();
         sb.getTransformMatrix().setToScaling(SCALE,SCALE,1);
 
-        lightSource = new LightSource(500, 500, 500);
+        lightSources = new ArrayList<>();
+
+//        TODO: Figure out why having 2 light sources disables mesh rendering
+        LightSource lightSource2 = new LightSource(500, 180, 464);
+        lightSource2.setColor(1f,0f,0f,1f);
+        lightSources.add(lightSource2);
+
+        LightSource lightSource = new LightSource(500, 500, 500);
         lightSource.setColor(0.7f,0.7f,0.7f,1f);
+        lightSources.add(lightSource);
+//        180, 464
+
 
         computeNormal(255,137,128);
         computeNormal(255/2,255/2,250);
@@ -88,12 +98,6 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         return shader;
     }
 
-    void bindImages(){
-//        img2 = lightSource.getLightingMask();
-//        img2.bind(1);
-//        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-    }
-
     void enableLightMask(){
         /* Clear our depth buffer info from previous frame. */
         Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
@@ -108,7 +112,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         Gdx.gl.glColorMask(false, false, false, false);
 
         /* Render mask elements. */
-        lightSource.drawMask(sb);
+        lightSources.forEach(s -> {s.drawMask(sb);});
 
         /* Enable RGBA color writing. */
         Gdx.gl.glColorMask(true, true, true, true);
@@ -122,21 +126,20 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         ScreenUtils.clear(0,0,0,1);
 
         // define uniform data to be given to light shader
-        lightSource.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
-        lightSource.update(walls);
-
+        lightSources.get(0).setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+        lightSources.forEach(lightSource -> lightSource.update(walls));
 
         triangle.rotation += 1;
 
         /* Draw background */
-        lightSource.bindShader(meshShader, sb);
+        LightSource.bindShader(meshShader, sb, lightSources);
+//        lightSource.bindShader(meshShader, sb);
         mesh.render(meshShader, GL20.GL_TRIANGLES);
 
 //        enableLightMask();
         /* Draw stuff you want to light mask to affect */
 
-        lightSource.bindShader(lightShader, sb);
-
+        LightSource.bindShader(lightShader, sb, lightSources);
         sb.begin();
         sb.setShader(lightShader);
         cube.render(sb, lightShader, 200, 200);
@@ -165,24 +168,14 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
     }
 
-    void computeNormal(int r, int g, int b){
-        float x = r/255.0f;
-        float y = g/255.0f;
+    void computeNormal(int r, int g, int b) {
+        float x = r / 255.0f;
+        float y = g / 255.0f;
         x -= 0.5f;
         y -= 0.5f;
         x *= 2;
         y *= 2;
         System.out.println("x,y = {" + x + ", " + y + "}");
-    }
-
-    private void bindLightingShader(float[] mousePos, float[] screenRes, float[] lightColor, float ambientLight, ShaderProgram lightShader) {
-        lightShader.bind();
-        lightShader.setUniform2fv("u_screenRes", screenRes, 0, 2);
-        lightShader.setUniform2fv("u_mousePos", mousePos, 0, 2);
-        lightShader.setUniform4fv("u_lightColor", lightColor, 0, 4);
-        lightShader.setUniformf("u_ambientLight", ambientLight);
-        lightShader.setUniformMatrix("u_projTrans", sb.getTransformMatrix());
-        lightShader.setUniformf("u_lightRadiusPixels", lightSource.getRadius());
     }
 
     @Override
