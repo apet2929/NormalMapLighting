@@ -8,9 +8,12 @@
 
 //uniform sampler2D textures[3]; // 0 => texture, 1 => normal map, 2 => light mask
 
+#define MAX_LIGHTS 12
+
 uniform vec2 u_screenRes;
-uniform vec2 u_lightPos;
-uniform vec4 u_lightColor;
+uniform vec2 u_lightPos[MAX_LIGHTS];
+uniform vec4 u_lightColor[MAX_LIGHTS];
+uniform int u_numLights;
 uniform float u_ambientLight;
 
 varying vec4 v_color;
@@ -23,10 +26,16 @@ float calcLightIntensity(float dist){
 
 void main()
 {
-    vec2 diff = (u_lightPos - gl_FragCoord.xy)/u_screenRes;
-    float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
-    gl_FragColor = v_color * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);
-//    gl_FragColor = v_color * tex1 * (calcLightIntensity(dist) * u_lightColor) + (u_ambientLight * u_lightColor);
+    vec4 accu_light = vec4(0);
+    vec4 accu_ambient = vec4(0);
+    for(int i = 0; i < u_numLights; i++){
+        vec2 diff = (u_lightPos[i] - gl_FragCoord.xy)/u_screenRes;
+        float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
+        accu_light += (calcLightIntensity(dist) * u_lightColor[i]);
+        accu_ambient += u_ambientLight * u_lightColor[i];
+    }
+
+    gl_FragColor = v_color * accu_light + accu_ambient;
 }
 
 

@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
+import javafx.scene.effect.Light;
 
 import java.util.ArrayList;
 
@@ -28,6 +29,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     Mesh mesh;
     ArrayList<LightBlocker> walls;
     ArrayList<LightSource> lightSources;
+    LightMask lightMask;
 
     @Override
     public void create() {
@@ -68,15 +70,14 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         lightSources = new ArrayList<>();
 
 //        TODO: Figure out why having 2 light sources disables mesh rendering
-        LightSource lightSource2 = new LightSource(500, 180, 464);
-        lightSource2.setColor(1f,0f,0f,1f);
+        LightSource lightSource2 = new LightSource(180, 464);
+        lightSource2.setColor(1f,1f,0f,0f);
         lightSources.add(lightSource2);
 
-        LightSource lightSource = new LightSource(500, 500, 500);
-        lightSource.setColor(0.7f,0.7f,0.7f,1f);
+        LightSource lightSource = new LightSource(500, 500);
+        lightSource.setColor(0.5f,0f,0f,1f);
         lightSources.add(lightSource);
-//        180, 464
-
+        lightMask = new LightMask(500, 500, 500);
 
         computeNormal(255,137,128);
         computeNormal(255/2,255/2,250);
@@ -112,7 +113,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         Gdx.gl.glColorMask(false, false, false, false);
 
         /* Render mask elements. */
-        lightSources.forEach(s -> {s.drawMask(sb);});
+        lightMask.drawMask(sb);
 
         /* Enable RGBA color writing. */
         Gdx.gl.glColorMask(true, true, true, true);
@@ -126,8 +127,9 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         ScreenUtils.clear(0,0,0,1);
 
         // define uniform data to be given to light shader
+//        lightMask.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
         lightSources.get(0).setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
-        lightSources.forEach(lightSource -> lightSource.update(walls));
+//        lightMask.update(walls);
 
         triangle.rotation += 1;
 
@@ -139,18 +141,21 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 //        enableLightMask();
         /* Draw stuff you want to light mask to affect */
 
-        LightSource.bindShader(lightShader, sb, lightSources);
-        sb.begin();
-        sb.setShader(lightShader);
-        cube.render(sb, lightShader, 200, 200);
-        triangle.render(sb, lightShader, 100,100);
-        bird.render(sb, lightShader, 400,300);
-        sb.end();
+//        LightSource.bindShader(lightShader, sb, lightSources);
+//        sb.begin();
+//        sb.setShader(lightShader);
+//        cube.render(sb, lightShader, 800, 800);
+//        cube.render(sb, lightShader, 600, 800);
+//        cube.render(sb, lightShader, 400, 800);
+//        cube.render(sb, lightShader, 200, 800);
+//        triangle.render(sb, lightShader, 500,600);
+//        bird.render(sb, lightShader, 400,300);
+//        sb.end();
 
 
-        disableMask(); // disables light mask
+//        disableMask(); // disables light mask
         /* Draw foreground objects unaffected by light mask */
-        drawWalls();
+//        drawWalls();
 
     }
 
@@ -175,7 +180,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         y -= 0.5f;
         x *= 2;
         y *= 2;
-        System.out.println("x,y = {" + x + ", " + y + "}");
+//        System.out.println("x,y = {" + x + ", " + y + "}");
     }
 
     @Override

@@ -42,7 +42,7 @@ vec4 calcLight(vec4 tex){
     float brightness = 2;
     vec3 normal = get_normal();
     vec4 light = vec4(0);
-    for(int i = 0; i < u_numLights; i++){
+    for(int i = 0; i < 1; i++){
         vec2 diff = (u_lightPos[i] - gl_FragCoord.xy)/u_screenRes;
         vec3 r = vec3(diff.xy, u_lightZ);
         float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
