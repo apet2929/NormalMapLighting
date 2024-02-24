@@ -47,20 +47,19 @@ public class LightSource {
     }
 
     public void bindShader(ShaderProgram shader, Batch batch){
-//        float[] lightPos = new float[]{this.pos.x, this.pos.y, this.pos.z, 0f,0f,this.pos.z};
-        float[] lightPos = new float[]{500f,500f,this.pos.z, 3f,3f,this.pos.z};
+        float[] lightPos = new float[]{-2f,-2f, this.pos.x, this.pos.y};
         float[] screenRes = new float[]{
                 (float)Gdx.graphics.getWidth(),
                 (float)Gdx.graphics.getHeight()
         };
         float[] lightColor = new float[]{
 //                color.r, color.g, color.b, color.a
-                0f,0f,0f,0f,
+                1f,1f,1f,1f,
                 1f,1f,1f,1f,
         };
         shader.bind();
         shader.setUniform2fv("u_screenRes", screenRes, 0, 2);
-        shader.setUniform2fv("u_lightPos", lightPos, 0, 6);
+        shader.setUniform2fv("u_lightPos", lightPos, 0, 4);
         shader.setUniformf("u_lightZ", this.pos.z); // setting the lightPos to be a Vec3 breaks opacity
         shader.setUniform4fv("u_lightColor", lightColor, 0, 8);
         shader.setUniformf("u_ambientLight", ambientLight);
