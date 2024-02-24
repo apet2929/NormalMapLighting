@@ -5,10 +5,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.EarClippingTriangulator;
-import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ShortArray;
 
 import java.util.ArrayList;
@@ -18,7 +15,7 @@ import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 public class LightSource {
     private ArrayList<Ray> rays;
-    private Vector2 pos;
+    private Vector3 pos;
     private Rectangle lightingMaskRect;
     private PolygonSprite polygonSprite;
     private float radius;
@@ -30,11 +27,11 @@ public class LightSource {
 
     public LightSource(int numRays, float x, float y){
         rays = new ArrayList<>();
-        pos = new Vector2(x,y);
+        pos = new Vector3(x,y, 0.1f);
         radius = 400;
         float incRot = 360.0f / numRays;
         for (int i = 0; i < numRays; i++) {
-            rays.add(new Ray(pos, incRot*i, radius));
+            rays.add(new Ray(new Vector2(pos.x, pos.y), incRot*i, radius));
         }
 
         triangulator = new EarClippingTriangulator();
@@ -50,7 +47,7 @@ public class LightSource {
     }
 
     public void bindShader(ShaderProgram shader, Batch batch){
-        float[] lightPos = new float[]{this.pos.x, this.pos.y};
+        float[] lightPos = new float[]{this.pos.x, this.pos.y, this.pos.z};
         float[] screenRes = new float[]{
                 (float)Gdx.graphics.getWidth(),
                 (float)Gdx.graphics.getHeight()
@@ -60,7 +57,8 @@ public class LightSource {
         };
         shader.bind();
         shader.setUniform2fv("u_screenRes", screenRes, 0, 2);
-        shader.setUniform2fv("u_lightPos", lightPos, 0, 2);
+        shader.setUniform2fv("u_lightPos", lightPos, 0, 3);
+        shader.setUniformf("u_lightZ", this.pos.z); // setting the lightPos to be a Vec3 breaks opacity
         shader.setUniform4fv("u_lightColor", lightColor, 0, 4);
         shader.setUniformf("u_ambientLight", ambientLight);
         shader.setUniformMatrix("u_projTrans", batch.getTransformMatrix());
@@ -79,9 +77,9 @@ public class LightSource {
     }
 
     public void setPos(float x, float y){
-        pos.set(x,y);
+        pos.set(x,y, pos.z);
         for (Ray ray : rays) {
-            ray.pos = pos;
+            ray.pos = new Vector2(pos.x, pos.y);
         }
     }
 

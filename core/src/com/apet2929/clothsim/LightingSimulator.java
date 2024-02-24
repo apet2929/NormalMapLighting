@@ -60,7 +60,6 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         walls = new ArrayList<>();
         walls.add(new Wall(new Vector2(0.1f*w, 0.4f*h), new Vector2(0.5f*w, 0.9f*h)));
         walls.add(new Wall(new Vector2(0.2f*w, 0.1f*h), new Vector2(0.1f*w, 0.9f*h)));
-//        walls.add(new Wall(new Vector2(0.4f*w, 0.4f*h),  new Vector2(0.9f*w, 0.1f*h)));
         walls.add(new Wall(new Vector2(0.3f*w, 0.5f*h),  new Vector2(0.7f*w, 0.5f*h)));
 
         sr = new ShapeRenderer();

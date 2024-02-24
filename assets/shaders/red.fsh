@@ -8,10 +8,13 @@
 
 //uniform sampler2D textures[3]; // 0 => texture, 1 => normal map, 2 => light mask
 
+
+
 uniform sampler2D u_normalMap;
 uniform sampler2D u_texture;
 uniform vec2 u_screenRes;
 uniform vec2 u_lightPos;
+uniform float u_lightZ;
 uniform vec4 u_lightColor;
 uniform float u_ambientLight;
 uniform float u_lightRadiusPixels;
@@ -42,7 +45,7 @@ void main()
     float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
 
-    vec3 r = vec3(diff.xy,0.1);
+    vec3 r = vec3(diff.xy, u_lightZ);
     vec3 normal = get_normal();
     float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
 
