@@ -69,18 +69,16 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         lightSources = new ArrayList<>();
 
-//        TODO: Figure out why having 2 light sources disables mesh rendering
-        LightSource lightSource2 = new LightSource(180, 464);
-        lightSource2.setColor(1f,1f,0f,0f);
-        lightSources.add(lightSource2);
-
-        LightSource lightSource = new LightSource(500, 500);
-        lightSource.setColor(0.5f,0f,0f,1f);
+        LightSource lightSource = new LightSource(500, 500, 100f);
+        lightSource.setColor(1f,1f,1f,1f);
         lightSources.add(lightSource);
-        lightMask = new LightMask(500, 500, 500);
 
-        computeNormal(255,137,128);
-        computeNormal(255/2,255/2,250);
+        LightSource lightSource3 = new LightSource(0, 1000, 1000f);
+        lightSource3.setColor(1f,1f,1f,1f);
+        lightSource3.brightness = 5f;
+        lightSources.add(lightSource3);
+
+        lightMask = new LightMask(500, 500, 500);
     }
 
     private ShaderProgram loadShader(String name) {
@@ -127,35 +125,34 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         ScreenUtils.clear(0,0,0,1);
 
         // define uniform data to be given to light shader
-//        lightMask.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+        lightMask.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
         lightSources.get(0).setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
-//        lightMask.update(walls);
+        lightMask.update(walls);
 
         triangle.rotation += 1;
 
         /* Draw background */
         LightSource.bindShader(meshShader, sb, lightSources);
-//        lightSource.bindShader(meshShader, sb);
         mesh.render(meshShader, GL20.GL_TRIANGLES);
 
 //        enableLightMask();
         /* Draw stuff you want to light mask to affect */
 
-//        LightSource.bindShader(lightShader, sb, lightSources);
-//        sb.begin();
-//        sb.setShader(lightShader);
-//        cube.render(sb, lightShader, 800, 800);
-//        cube.render(sb, lightShader, 600, 800);
-//        cube.render(sb, lightShader, 400, 800);
-//        cube.render(sb, lightShader, 200, 800);
-//        triangle.render(sb, lightShader, 500,600);
-//        bird.render(sb, lightShader, 400,300);
-//        sb.end();
+        LightSource.bindShader(lightShader, sb, lightSources);
+        sb.begin();
+        sb.setShader(lightShader);
+        cube.render(sb, lightShader, 800, 800);
+        cube.render(sb, lightShader, 600, 800);
+        cube.render(sb, lightShader, 400, 800);
+        cube.render(sb, lightShader, 200, 800);
+        triangle.render(sb, lightShader, 500,600);
+        bird.render(sb, lightShader, 400,300);
+        sb.end();
 
 
-//        disableMask(); // disables light mask
+        disableMask(); // disables light mask
         /* Draw foreground objects unaffected by light mask */
-//        drawWalls();
+        drawWalls();
 
     }
 

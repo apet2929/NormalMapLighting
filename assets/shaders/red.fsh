@@ -14,20 +14,22 @@ uniform sampler2D u_normalMap;
 uniform sampler2D u_texture;
 uniform vec2 u_screenRes;
 uniform vec2 u_lightPos[MAX_LIGHTS];
-uniform float u_lightZ;
+uniform float u_lightZ[MAX_LIGHTS];
 uniform vec4 u_lightColor[MAX_LIGHTS];
+uniform float u_lightRadiusPixels[MAX_LIGHTS];
+uniform float u_brightness[MAX_LIGHTS];
 uniform float u_ambientLight;
-uniform float u_lightRadiusPixels;
+uniform vec4 u_ambientLightColor;
 uniform float u_rotation;
 uniform int u_numLights;
 
 varying vec2 v_texCoord0;
 varying vec4 v_color;
 
-float calcLightIntensity(vec2 dist){
+float calcLightIntensity(vec2 dist, float radius){
     float distPixels = length(vec2(dist.x * u_screenRes.x, dist.y * u_screenRes.y));
-    float percentRadius = distPixels / u_lightRadiusPixels;
-    return 1 - (percentRadius);
+    float percentRadius = distPixels / radius;
+    return 1 - percentRadius;
 }
 
 vec3 get_normal(){
@@ -39,24 +41,24 @@ vec3 get_normal(){
 }
 
 vec4 calcLight(vec4 tex){
-    float brightness = 2;
     vec3 normal = get_normal();
     vec4 light = vec4(0);
-    for(int i = 0; i < 1; i++){
+    for(int i = 0; i < u_numLights; i++){
         vec2 diff = (u_lightPos[i] - gl_FragCoord.xy)/u_screenRes;
-        vec3 r = vec3(diff.xy, u_lightZ);
+        vec3 r = vec3(diff.xy, u_lightZ[i]);
         float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
-        float lightIntensity = calcLightIntensity(diff);
-        light += brightness * u_lightColor[i] * tex * normalFalloff * lightIntensity;
+        float lightIntensity = calcLightIntensity(diff, u_lightRadiusPixels[i]);
+        if(lightIntensity < 0) lightIntensity = 0;
+//        light += brightness * u_lightColor[i] * tex * normalFalloff * lightIntensity;
+        light += u_brightness[i] * tex * normalFalloff * lightIntensity;
     }
     return light;
-
 }
 
 void main()
 {
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
-    gl_FragColor = calcLight(tex1) + (u_ambientLight * tex1);
+    gl_FragColor = calcLight(tex1) + (tex1 * u_ambientLight * u_ambientLightColor); // + (u_ambientLight * tex1);
 }
 
 

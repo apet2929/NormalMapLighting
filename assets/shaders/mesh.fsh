@@ -12,30 +12,36 @@
 
 uniform vec2 u_screenRes;
 uniform vec2 u_lightPos[MAX_LIGHTS];
+uniform float u_lightZ[MAX_LIGHTS];
 uniform vec4 u_lightColor[MAX_LIGHTS];
-uniform int u_numLights;
+uniform float u_lightRadiusPixels[MAX_LIGHTS];
+uniform float u_brightness[MAX_LIGHTS];
 uniform float u_ambientLight;
+uniform vec4 u_ambientLightColor;
+uniform float u_rotation;
+uniform int u_numLights;
+
 
 varying vec4 v_color;
 
-float calcLightIntensity(float dist){
-    float intensity = 1 - tanh(dist);
-//    return intensity * texture2D(lightMask, v_texCoord0);
-    return intensity;
+float calcLightIntensity(vec2 dist, float radius){
+    float distPixels = length(vec2(dist.x * u_screenRes.x, dist.y * u_screenRes.y));
+    float percentRadius = distPixels / radius;
+    return 1 - percentRadius;
 }
 
 void main()
 {
     vec4 accu_light = vec4(0);
-    vec4 accu_ambient = vec4(0);
     for(int i = 0; i < u_numLights; i++){
         vec2 diff = (u_lightPos[i] - gl_FragCoord.xy)/u_screenRes;
-        float dist = sqrt(diff.x*diff.x + diff.y*diff.y)*2;
-        accu_light += (calcLightIntensity(dist) * u_lightColor[i]);
-        accu_ambient += u_ambientLight * u_lightColor[i];
+        float lightIntensity = calcLightIntensity(diff, u_lightRadiusPixels[i]);
+        if(lightIntensity < 0) lightIntensity = 0;
+        accu_light += u_brightness[i] * lightIntensity;
     }
 
-    gl_FragColor = v_color * accu_light + accu_ambient;
+    gl_FragColor = (v_color * accu_light) + (u_ambientLight * u_ambientLightColor);
+    //gl_FragColor = u_ambientLight * u_ambientLightColor;
 }
 
 

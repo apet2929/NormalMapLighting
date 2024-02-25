@@ -10,21 +10,29 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ShortArray;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static com.badlogic.gdx.graphics.Pixmap.Format.Alpha;
 import static com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888;
 
 public class LightSource {
+    public static float AMBIENT_LIGHT = 0.2f;
+    public static Color AMBIENT_LIGHT_COLOR = new Color(Color.WHITE);
+
     private Vector3 pos;
     private float radius;
     private Color color;
-    private float ambientLight;
+    public float brightness;
 
     public LightSource(float x, float y){
+        this(x,y, 1000);
+    }
+
+    public LightSource(float x, float y, float radius){
         pos = new Vector3(x,y, 0.1f);
-        radius = 400;
-        color = Color.WHITE;
-        ambientLight = 0.2f;
+        this.radius = radius;
+        color = new Color(Color.WHITE);
+        brightness = 1;
     }
 
     /**
@@ -38,10 +46,16 @@ public class LightSource {
     public static void bindShader(ShaderProgram shader, Batch batch, ArrayList<LightSource> lSources){
         float[] lightPos = new float[2 * lSources.size()];
         float[] lightColor = new float[4 * lSources.size()];
-
+        float[] lightZ = new float[lSources.size()];
+        float[] lightRadius = new float[lSources.size()];
+        float[] brightness = new float[lSources.size()];
         float[] screenRes = new float[]{
                 (float)Gdx.graphics.getWidth(),
                 (float)Gdx.graphics.getHeight()
+        };
+        float[] ambientLightColor = new float[]{
+                AMBIENT_LIGHT_COLOR.r, AMBIENT_LIGHT_COLOR.g,
+                AMBIENT_LIGHT_COLOR.b, AMBIENT_LIGHT_COLOR.a
         };
 
         for (int i = 0; i < lSources.size(); i++) {
@@ -51,6 +65,9 @@ public class LightSource {
             lightColor[4*i+1] = lSources.get(i).color.g;
             lightColor[4*i+2] = lSources.get(i).color.b;
             lightColor[4*i+3] = lSources.get(i).color.a;
+            lightRadius[i] = lSources.get(i).radius;
+            lightZ[i] = lSources.get(i).pos.z;
+            brightness[i] = lSources.get(i).brightness;
         }
 
         shader.bind();
@@ -59,12 +76,11 @@ public class LightSource {
         shader.setUniformi("u_numLights", lSources.size());
         shader.setUniform2fv("u_lightPos", lightPos, 0, 2*lSources.size());
         shader.setUniform4fv("u_lightColor", lightColor, 0, 4*lSources.size());
-        shader.setUniformf("u_lightZ", lSources.get(0).pos.z); // setting the lightPos to be a Vec3 breaks opacity
-        shader.setUniformf("u_ambientLight", lSources.get(0).ambientLight);
-        shader.setUniformf("u_lightRadiusPixels", lSources.get(0).radius);
-    }
-    public void setAmbientLight(float ambientLight) {
-        this.ambientLight = ambientLight;
+        shader.setUniform1fv("u_lightRadiusPixels", lightRadius, 0, lSources.size());
+        shader.setUniform1fv("u_lightZ", lightZ, 0, lSources.size()); // setting the lightPos to be a Vec3 breaks opacity
+        shader.setUniform1fv("u_brightness", brightness, 0, lSources.size());
+        shader.setUniformf("u_ambientLight", AMBIENT_LIGHT);
+        shader.setUniform4fv("u_ambientLightColor", ambientLightColor, 0, 4);
     }
 
     public void setPos(float x, float y){
