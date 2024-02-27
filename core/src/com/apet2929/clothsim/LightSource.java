@@ -86,6 +86,13 @@ public class LightSource {
     public void setPos(float x, float y){
         pos.set(x,y, pos.z);
     }
+    public void setPos(float x, float y, float z){
+        pos.set(x,y, z);
+    }
+
+    public Vector3 getPos(){
+        return pos;
+    }
 
     public Texture getWhiteTexture(){
         Pixmap pixmap = new Pixmap(1,1, Pixmap.Format.RGBA8888);

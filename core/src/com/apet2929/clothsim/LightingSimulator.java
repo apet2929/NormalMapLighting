@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
 import javafx.scene.effect.Light;
 
@@ -21,6 +22,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
     TextureWithNormal cube;
     TextureWithNormal triangle;
     TextureWithNormal bird;
+    TextureWithNormal bg;
     ShaderProgram lightShader;
     ShaderProgram basicShader;
     ShaderProgram meshShader;
@@ -40,6 +42,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         basicShader = loadShader("basic");
         meshShader = loadShader("red","mesh");
 
+        bg = new TextureWithNormal("grass.PNG", "flat.png", Gdx.graphics.getWidth() / 16f);
         triangle = new TextureWithNormal("triangle.png", "normal_triangle.png", 10);
         cube = new TextureWithNormal("grass.PNG", "normal_cube.png", 10);
         bird = new TextureWithNormal("coco.png", "coco_normal.png", 10);
@@ -69,7 +72,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
 
         lightSources = new ArrayList<>();
 
-        LightSource lightSource = new LightSource(500, 500, 100f);
+        LightSource lightSource = new LightSource(500, 500, 300f);
         lightSource.setColor(1f,1f,1f,1f);
         lightSources.add(lightSource);
 
@@ -127,13 +130,16 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         // define uniform data to be given to light shader
         lightMask.setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
         lightSources.get(0).setPos(Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
+        Vector3 pos = lightSources.get(1).getPos();
+//        pos.z += 0.001f;
         lightMask.update(walls);
+
 
         triangle.rotation += 1;
 
         /* Draw background */
-        LightSource.bindShader(meshShader, sb, lightSources);
-        mesh.render(meshShader, GL20.GL_TRIANGLES);
+//        LightSource.bindShader(meshShader, sb, lightSources);
+//        mesh.render(meshShader, GL20.GL_TRIANGLES);
 
 //        enableLightMask();
         /* Draw stuff you want to light mask to affect */
@@ -141,6 +147,7 @@ public class LightingSimulator  extends ApplicationAdapter implements InputProce
         LightSource.bindShader(lightShader, sb, lightSources);
         sb.begin();
         sb.setShader(lightShader);
+        bg.render(sb, lightShader, -10 + Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2);
         cube.render(sb, lightShader, 800, 800);
         cube.render(sb, lightShader, 600, 800);
         cube.render(sb, lightShader, 400, 800);

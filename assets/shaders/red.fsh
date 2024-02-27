@@ -26,8 +26,8 @@ uniform int u_numLights;
 varying vec2 v_texCoord0;
 varying vec4 v_color;
 
-float calcLightIntensity(vec2 dist, float radius){
-    float distPixels = length(vec2(dist.x * u_screenRes.x, dist.y * u_screenRes.y));
+float calcLightIntensity(vec3 dist, float radius){
+    float distPixels = length(vec3(dist.x * u_screenRes.x, dist.y * u_screenRes.y, dist.z));
     float percentRadius = distPixels / radius;
     return 1 - percentRadius;
 }
@@ -42,23 +42,24 @@ vec3 get_normal(){
 
 vec4 calcLight(vec4 tex){
     vec3 normal = get_normal();
-    vec4 light = vec4(0);
+    vec4 light = vec4(0,0,0,1);
     for(int i = 0; i < u_numLights; i++){
-        vec2 diff = (u_lightPos[i] - gl_FragCoord.xy)/u_screenRes;
-        vec3 r = vec3(diff.xy, u_lightZ[i]);
-        float normalFalloff = clamp(dot(normalize(normal), normalize(r)), 0.2, 1.0);
+        vec3 pos = vec3(u_lightPos[i], u_lightZ[i]);
+        vec3 fragCoord = vec3(gl_FragCoord.xy, 0);
+        vec3 diff = (pos - fragCoord)/vec3(u_screenRes, 1);
+        float normalFalloff = clamp(dot(normalize(normal), normalize(diff)), 0.0, 1.0);
         float lightIntensity = calcLightIntensity(diff, u_lightRadiusPixels[i]);
         if(lightIntensity < 0) lightIntensity = 0;
-//        light += brightness * u_lightColor[i] * tex * normalFalloff * lightIntensity;
-        light += u_brightness[i] * tex * normalFalloff * lightIntensity;
+        light += u_brightness[i] * normalFalloff * tex  * lightIntensity;
     }
+    light.a = min(light.a, tex.a);
     return light;
 }
 
 void main()
 {
     vec4 tex1 = texture2D(u_texture, v_texCoord0);
-    gl_FragColor = calcLight(tex1) + (tex1 * u_ambientLight * u_ambientLightColor); // + (u_ambientLight * tex1);
+    gl_FragColor = calcLight(tex1) + (tex1 * u_ambientLight * u_ambientLightColor);
 }
 
 
